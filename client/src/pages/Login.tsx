@@ -13,7 +13,7 @@ const Login = () => {
     throw new Error("AppContextProvider is missing");
   }
 
-  const { navigate, setUser } = context;
+  const { navigate, setUser, setOwner } = context;
 
   const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,10 +21,9 @@ const Login = () => {
 
   const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    navigate("/");
-    setUser(true);
+    setOwner(true);
+    navigate("/owner");
     toast.success("Login Successfull");
-    console.log("FormData", formData);
   };
 
   return (

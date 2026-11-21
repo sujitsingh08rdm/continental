@@ -44,7 +44,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 bg-indigo-500 w-full flex items-center justify-between p-4 md:px-16 lg:px-24 xl:px-32 z-50">
+    <nav className="fixed top-0 left-0 bg-primary w-full flex items-center justify-between p-4 md:px-16 lg:px-24 xl:px-32 z-50">
       {/* Logo */}
       <Link to="/" className="flex items-center gap-2">
         <img className="h-10" src="/logo.png" alt="Logo" />
@@ -200,7 +200,7 @@ const Navbar = () => {
         ) : (
           <button
             onClick={handleLogin}
-            className="px-8 py-2.5 rounded-full bg-indigo-500 text-white hover:bg-indigo-600 active:scale-95 transition-all"
+            className="px-8 py-2.5 rounded-full bg-primary text-white hover:bg-indigo-600 active:scale-95 transition-all"
           >
             Login
           </button>

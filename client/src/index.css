@@ -7,7 +7,7 @@
 }
 
 @theme {
-  --color-primary: #003dfc;
+  --color-primary: oklch(58.5% 0.233 277.117);
   --color-secondary: #fbbf24;
   --color-heading: #101828;
   --color-paragraph: #6a7282;
