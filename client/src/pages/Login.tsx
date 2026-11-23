@@ -3,6 +3,8 @@ import { useContext, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
+import httpRequest from "../utils/httpRequest";
+import ClientCatchError from "../utils/ClientCatchError";
 
 const Login = () => {
   const context = useContext(AppContext);
@@ -21,9 +23,24 @@ const Login = () => {
 
   const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOwner(true);
-    navigate("/owner");
-    toast.success("Login Successfull");
+    try {
+      const { data } = await httpRequest.post("/api/auth/login", formData);
+
+      if (data.success) {
+        toast.success(data.message);
+        if (data.user.role === "owner") {
+          setOwner(true);
+          navigate("/owner");
+        } else {
+          setUser(true);
+          navigate("/");
+        }
+      } else {
+        throw new Error(data.message || "Something went wrong");
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
 
   return (

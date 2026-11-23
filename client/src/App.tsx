@@ -25,7 +25,6 @@ function App() {
     throw new Error("Conext Not Mounted");
   }
   const { owner } = context;
-
   const ownerPath = useLocation().pathname.includes("owner");
 
   return (
