@@ -8,16 +8,30 @@ import {
 import { useContext } from "react";
 import { AppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
+import httpRequest from "../../utils/httpRequest";
+import ClientCatchError from "../../utils/ClientCatchError";
 
 const OwnerLayout = () => {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error("Conext Not Mounted");
   }
-  const { owner, setOwner } = context;
+
+  const { owner, setOwner, navigate } = context;
+
   const logout = async () => {
-    setOwner(false);
-    toast.success("Logout Successfully");
+    try {
+      const { data } = await httpRequest.post("/api/auth/logout");
+      if (data.success) {
+        setOwner(false);
+        toast.success("Logout Successfully");
+        navigate("/");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
 
   const sidebarLinks = [

@@ -1,13 +1,36 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext.js";
 import { MapPin, StarIcon } from "lucide-react";
+import ClientCatchError from "../../utils/ClientCatchError.js";
+import httpRequest from "../../utils/httpRequest.js";
+import toast from "react-hot-toast";
 
 const AllHotels = () => {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error("Conext Not Mounted");
   }
-  const { hotelData, navigate } = context;
+  const { navigate } = context;
+
+  const [hotelData, setHotelData] = useState([]);
+  console.log(hotelData);
+
+  const fetchOwnerHotels = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/hotel/get");
+      if (data.success) {
+        setHotelData(data.hotels);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOwnerHotels();
+  }, []);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-50 p-6">
@@ -65,22 +88,22 @@ const AllHotels = () => {
               <tbody className="divide-y divide-gray-100">
                 {hotelData.map((hotel: any, index: number) => (
                   <tr
-                    key={hotel.id}
+                    key={hotel._id}
                     className={`hover:bg-blue-50 transition-all duration-200 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                   >
                     <td className="px-6 py-6">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
                           <img
-                            src={hotel.image}
-                            alt={hotel.name}
+                            src={`http://localhost:8080/images/${hotel.image}`}
+                            alt={hotel.hotelName}
                             className="w-20 h-16 rounded-xl object-cover shadow-md"
                           />
                           <div className="absolute inset-0 bg-linear-to-r from-black/10 to-transparent rounded-xl"></div>
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors">
-                            {hotel.name}
+                            {hotel.hotelName}
                           </h3>
                         </div>
                       </div>
@@ -89,21 +112,21 @@ const AllHotels = () => {
                       <div className="flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
                         <span className="text-gray-600 text-sm leading-relaxed">
-                          {hotel.address}
+                          {hotel.hotelAddress}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-6">
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-600 text-sm leading-relaxed">
-                          {hotel.ownerName}
+                          {hotel.owner.name}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-6">
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-600 text-sm leading-relaxed">
-                          {hotel.contactNumber}
+                          +91-987654321
                         </span>
                       </div>
                     </td>
@@ -117,13 +140,13 @@ const AllHotels = () => {
                     </td>
                     <td className="px-6 py-6">
                       <span className="text-2xl font-medium text-green-600">
-                        {hotel.price}
+                        ₹{hotel.price}
                       </span>
                     </td>
                     <td className="px-6 py-6">
                       <div className="flex flex-wrap gap-1">
                         {hotel.amenities
-                          .slice(0, 3)
+                          .split(",")
                           .map((amenity: any, index: number) => (
                             <span
                               key={index}

@@ -4,6 +4,8 @@ import { Menu, X } from "lucide-react";
 import { AppContext } from "../context/AppContext";
 import { assets } from "../assets/assets.js";
 import toast from "react-hot-toast";
+import httpRequest from "../utils/httpRequest.js";
+import ClientCatchError from "../utils/ClientCatchError.js";
 
 const Navbar = () => {
   const context = useContext(AppContext);
@@ -37,10 +39,19 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  const handleLogout = () => {
-    toast.success("Logout!");
-    setUser(false);
-    navigate("/login");
+  const logout = async () => {
+    try {
+      const { data } = await httpRequest.post("/api/auth/logout");
+      if (data.success) {
+        setUser(false);
+        toast.success("Logout Successfully");
+        navigate("/");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
 
   return (
@@ -63,12 +74,14 @@ const Navbar = () => {
           </Link>
         ))}
 
-        <Link
-          to="/owner"
-          className="border px-4 py-1 text-sm rounded-full text-white hover:text-indigo-950 hover:bg-indigo-100 transition-all"
-        >
-          Owner
-        </Link>
+        {user || (
+          <Link
+            to="/owner"
+            className="border px-4 py-1 text-sm rounded-full text-white hover:text-indigo-950 hover:bg-indigo-100 transition-all"
+          >
+            Owner
+          </Link>
+        )}
       </div>
 
       {/* Desktop Login */}
@@ -90,7 +103,7 @@ const Navbar = () => {
                     My Booking
                   </Link>
                 </li>
-                <li onClick={handleLogout}>
+                <li onClick={logout}>
                   <Link
                     to="/login"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -160,13 +173,15 @@ const Navbar = () => {
           </Link>
         ))}
 
-        <Link
-          to="/owner"
-          onClick={closeMenu}
-          className="border px-5 py-2 rounded-full hover:bg-indigo-100 transition-all"
-        >
-          Owner
-        </Link>
+        {user || (
+          <Link
+            to="/owner"
+            onClick={closeMenu}
+            className="border px-5 py-2 rounded-full hover:bg-indigo-100 transition-all"
+          >
+            Owner
+          </Link>
+        )}
 
         {user ? (
           <>
@@ -187,7 +202,7 @@ const Navbar = () => {
                   My Booking
                 </Link>
               </li>
-              <li onClick={handleLogout}>
+              <li onClick={logout}>
                 <Link
                   to="/login"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-100"

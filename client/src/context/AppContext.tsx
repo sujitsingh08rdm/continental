@@ -2,6 +2,8 @@ import { createContext, useEffect, useState } from "react";
 import type { ChildrenInterface } from "../types/ChildrenInterface";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
 import { hotelsData, roomsData } from "../assets/assets.js";
+import ClientCatchError from "../utils/ClientCatchError.js";
+import httpRequest from "../utils/httpRequest.js";
 
 interface AppContextInterface {
   navigate: NavigateFunction;
@@ -20,9 +22,26 @@ export const AppContext = createContext<AppContextInterface | null>(null);
 const AppContextProvider = ({ children }: ChildrenInterface) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [owner, setOwner] = useState(true);
+  const [owner, setOwner] = useState(null);
   const [hotelData, setHotelData] = useState([]);
   const [roomData, setRoomData] = useState([]);
+
+  const checkUserLoggedInOrNot = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/auth/is-auth");
+
+      if (data.success) {
+        if (data.user.role === "user") {
+          setUser(true);
+        }
+        if (data.user.role === "owner") {
+          setOwner(true);
+        }
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
+  };
 
   const fetchHotelData = () => {
     setHotelData(hotelsData);
@@ -33,6 +52,7 @@ const AppContextProvider = ({ children }: ChildrenInterface) => {
   };
 
   useEffect(() => {
+    checkUserLoggedInOrNot();
     fetchHotelData();
     fetchRoomData();
   }, []);

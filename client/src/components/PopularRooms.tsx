@@ -7,7 +7,6 @@ const PopularRooms = () => {
     throw new Error("Conext Not Mounted");
   }
   const { navigate, roomData } = context;
-  console.log(roomData);
 
   return (
     <div className="py-12">

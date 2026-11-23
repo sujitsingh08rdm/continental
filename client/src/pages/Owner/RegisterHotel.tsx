@@ -1,7 +1,21 @@
-import { useState, type ChangeEvent, type SyntheticEvent } from "react";
-
+import {
+  useContext,
+  useState,
+  type ChangeEvent,
+  type SyntheticEvent,
+} from "react";
+import { AppContext } from "../../context/AppContext";
+import ClientCatchError from "../../utils/ClientCatchError";
+import httpRequest from "../../utils/httpRequest";
+import toast from "react-hot-toast";
 
 const RegisterHotel = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error("Conext Not Mounted");
+  }
+  const { navigate } = context;
+
   const [data, setData] = useState({
     hotelName: "",
     hotelAddress: "",
@@ -42,6 +56,19 @@ const RegisterHotel = () => {
     formData.append("amenities", data.amenities);
     formData.append("image", file as any);
     console.log(data);
+
+    try {
+      const { data } = await httpRequest.post("/api/hotel/register", formData);
+
+      if (data.success) {
+        toast.success(data.message);
+        navigate("/owner");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
 
   return (

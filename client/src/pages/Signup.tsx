@@ -1,6 +1,11 @@
-import { Mail, Lock, Eye, EyeOff, UserRoundIcon } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, UserRoundIcon, UserKey } from "lucide-react";
 import { useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
+import httpRequest from "../utils/httpRequest";
+import ClientCatchError from "../utils/ClientCatchError";
+import toast from "react-hot-toast";
 
 const Signup = () => {
   const [displayPassword, setDisplayPassword] = useState(false);
@@ -8,15 +13,33 @@ const Signup = () => {
     name: "",
     email: "",
     password: "",
+    role: "",
   });
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error("Conext Not Mounted");
+  }
+  const { navigate } = context;
 
-  const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
+  const onChangeHandler = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const submitHandler = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("FormData", formData);
+    try {
+      const { data } = await httpRequest.post("/api/auth/signup", formData);
+      if (data.success) {
+        toast.success(data.message);
+        navigate("/login");
+      } else {
+        throw new Error(data.message || "Something went wrong");
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
 
   return (
@@ -84,13 +107,18 @@ const Signup = () => {
         </div>
 
         {/* Forgot Password */}
-        <div className="mt-4 text-right">
-          <button
-            type="button"
-            className="text-sm text-indigo-500 hover:text-indigo-700 transition-colors"
+        <div className="flex items-center mt-4 w-full bg-white border border-gray-300 h-12 rounded-full px-5 gap-3 focus-within:border-indigo-500 transition-colors">
+          <UserKey size={18} className="text-gray-400" />
+          <select
+            name="role"
+            className="bg-transparent w-full h-full text-gray-500 placeholder-gray-500 outline-none text-sm"
+            value={formData.role}
+            onChange={onChangeHandler}
           >
-            Forgot password?
-          </button>
+            <option value="">Select your role</option>
+            <option value="owner">Owner</option>
+            <option value="user">User</option>
+          </select>
         </div>
 
         {/* Login Button */}
