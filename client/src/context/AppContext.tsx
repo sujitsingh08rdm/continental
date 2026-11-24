@@ -4,6 +4,7 @@ import { useNavigate, type NavigateFunction } from "react-router-dom";
 import { hotelsData, roomsData } from "../assets/assets.js";
 import ClientCatchError from "../utils/ClientCatchError.js";
 import httpRequest from "../utils/httpRequest.js";
+import toast from "react-hot-toast";
 
 interface AppContextInterface {
   navigate: NavigateFunction;
@@ -43,12 +44,32 @@ const AppContextProvider = ({ children }: ChildrenInterface) => {
     }
   };
 
-  const fetchHotelData = () => {
-    setHotelData(hotelsData);
+  const fetchHotelData = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/hotel/get-all");
+      if (data.success) {
+        setHotelData(data.hotels);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      ClientCatchError(error);
+    }
   };
 
-  const fetchRoomData = () => {
-    setRoomData(roomsData);
+  const fetchRoomData = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/room/get-all");
+      if (data.success) {
+        setRoomData(data.rooms);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
 
   useEffect(() => {

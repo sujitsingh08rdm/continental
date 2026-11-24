@@ -7,21 +7,20 @@ const Rooms = () => {
     throw new Error("Conext Not Mounted");
   }
   const { navigate, roomData } = context;
-
   return (
     <div className="py-24 max-w-7xl mx-auto">
       <h1 className="text-3xl font-semibold text-heading my-8 px-2 text-center">
         All Rooms
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-items-center gap-4 max-w-7xl mx-auto mt-12">
-        {roomData.map((item: any, index: number) => (
+        {roomData?.map((item: any, index: number) => (
           <div
             key={index}
             className="p-4 bg-white border border-gray-200 transition duration-300 rounded-lg shadow shadow-black/10 max-w-80 hover:scale-105 hover:shadow-lg"
           >
             <img
               className="rounded-md max-h-40 w-full object-cover"
-              src={item.images[0]}
+              src={`http://localhost:8080/images/${item.images[0]}`}
               alt="officeImage"
             />
             <p className="text-gray-900 text-xl font-semibold ml-2 mt-4">

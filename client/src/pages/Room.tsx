@@ -36,7 +36,6 @@ const Room = () => {
   const [persons, setPersons] = useState(1);
 
   const room = roomData.find((r: any) => r._id == id);
-  // Handle room not found or data not loaded
 
   if (!room) {
     return (
@@ -84,6 +83,7 @@ const Room = () => {
     }
     toast.success("Bookig Success");
   };
+  console.log(room);
 
   return (
     <div className="py-24 bg-gray-50 min-h-screen">
@@ -97,7 +97,7 @@ const Room = () => {
               </h1>
               <div className="flex items-center gap-2 text-gray-600 mb-2">
                 <MapPin className="w-5 h-5" />
-                <span>{room.hotel.address}</span>
+                <span>{room.hotel.hotelAddress}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1 items-center">
@@ -131,11 +131,11 @@ const Room = () => {
               <div className="text-gray-600">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  <span>{room.hotel.ownerName}</span>
+                  <span>{room.hotel.owner.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  <span>{room.hotel.contactNumber}</span>
+                  <span>+91-987654321</span>
                 </div>
               </div>
             </div>
@@ -149,7 +149,7 @@ const Room = () => {
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <img
-                src={room.images[selectedImage]}
+                src={`http://localhost:8080/images/${room.images[selectedImage]}`}
                 alt={`${room.roomType} - Image ${selectedImage + 1}`}
                 className="w-full h-96 object-cover rounded-xl"
               />
@@ -158,7 +158,7 @@ const Room = () => {
               {room.images.map((image: any, index: number) => (
                 <img
                   key={index}
-                  src={image}
+                  src={`http://localhost:8080/images/${image}`}
                   alt={`${room.roomType} - Image ${index + 1}`}
                   className={`h-24 lg:h-20 object-cover rounded-lg cursor-pointer transition-all duration-200 ${selectedImage === index ? "ring-4 ring-blue-400 opacity-100" : "opacity-80 hover:opacity-100"}`}
                   onClick={() => setSelectedImage(index)}
@@ -185,20 +185,22 @@ const Room = () => {
                 Room Amenities
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {room.amenities.map((amenity: any, index: number) => {
-                  const IconComponent = getAmenityIcon(amenity);
-                  return (
-                    <div
-                      className="items-center justify-center flex gap-2 p-2 rounded-2xl bg-indigo-50"
-                      key={index}
-                    >
-                      <IconComponent className="w-5 h-5 text-primary" />
-                      <span className="text-gray-700 font-medium">
-                        {amenity}
-                      </span>
-                    </div>
-                  );
-                })}
+                {room.amenities
+                  .split(", ")
+                  .map((amenity: any, index: number) => {
+                    const IconComponent = getAmenityIcon(amenity);
+                    return (
+                      <div
+                        className="items-center justify-center flex gap-2 p-2 rounded-2xl bg-indigo-50"
+                        key={index}
+                      >
+                        <IconComponent className="w-5 h-5 text-primary" />
+                        <span className="text-gray-700 font-medium">
+                          {amenity}
+                        </span>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
 
@@ -208,20 +210,22 @@ const Room = () => {
                 Hotel Facilities
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {room.hotel.amenities.map((amenity: any, index: number) => {
-                  const IconComponent = getAmenityIcon(amenity);
-                  return (
-                    <div
-                      className="items-center justify-center flex gap-2 p-2 rounded-2xl bg-indigo-50"
-                      key={index}
-                    >
-                      <IconComponent className="w-5 h-5 text-primary" />
-                      <span className="text-gray-700 font-medium">
-                        {amenity}
-                      </span>
-                    </div>
-                  );
-                })}
+                {room.hotel.amenities
+                  .split(",")
+                  .map((amenity: any, index: number) => {
+                    const IconComponent = getAmenityIcon(amenity);
+                    return (
+                      <div
+                        className="items-center justify-center flex gap-2 p-2 rounded-2xl bg-indigo-50"
+                        key={index}
+                      >
+                        <IconComponent className="w-5 h-5 text-primary" />
+                        <span className="text-gray-700 font-medium">
+                          {amenity}
+                        </span>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
 

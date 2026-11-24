@@ -16,4 +16,4 @@ const hotelSchema = new Schema(
   { timestamps: true },
 );
 
-export const Hotel = model("hotel", hotelSchema);
+export const Hotel = model("Hotel", hotelSchema);

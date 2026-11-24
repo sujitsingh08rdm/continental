@@ -1,13 +1,56 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "../../context/AppContext.js";
 import { MapPin, StarIcon } from "lucide-react";
+import httpRequest from "../../utils/httpRequest.js";
+import toast from "react-hot-toast";
+import ClientCatchError from "../../utils/ClientCatchError.js";
 
 const AllRooms = () => {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error("Conext Not Mounted");
   }
-  const { roomData, navigate } = context;
+  const { navigate } = context;
+  const [roomData, setRoomData] = useState([]);
+  const fetchOwnerRooms = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/room/get");
+      if (data.success) {
+        setRoomData(data.ownerRooms);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
+  };
+
+  const deleteRoom = async (id: string) => {
+    const confirm = window.confirm(
+      "Are you sure you want to delete this hotel? This action cannot be undone.",
+    );
+    if (!confirm) {
+      return;
+    }
+
+    try {
+      const { data } = await httpRequest.delete(`/api/room/delete/${id}`);
+      if (data.success) {
+        toast.success(data.message);
+        fetchOwnerRooms();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      ClientCatchError(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOwnerRooms();
+  }, []);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-50 p-6">
@@ -56,7 +99,7 @@ const AllRooms = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {roomData.map((room: any, index: number) => (
+                {roomData?.map((room: any, index: number) => (
                   <tr
                     key={room._id}
                     className={`hover:bg-blue-50 transition-all duration-200 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
@@ -65,7 +108,7 @@ const AllRooms = () => {
                       <div className="flex items-center space-x-4">
                         <div className="relative">
                           <img
-                            src={room.images[0]}
+                            src={`http://localhost:8080/images/${room.images[0]}`}
                             alt={room.roomType}
                             className="w-20 h-16 rounded-xl object-cover shadow-md"
                           />
@@ -73,7 +116,7 @@ const AllRooms = () => {
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors">
-                            {room.hotel.name}
+                            {room.hotel.hotelName}
                           </h3>
                         </div>
                       </div>
@@ -89,7 +132,7 @@ const AllRooms = () => {
                       <div className="flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
                         <span className="text-gray-600 text-sm leading-relaxed">
-                          {room.hotel.address}
+                          {room.hotel.hotelAddress}
                         </span>
                       </div>
                     </td>
@@ -111,18 +154,23 @@ const AllRooms = () => {
 
                     <td className="px-6 py-6">
                       <div className="flex flex-wrap gap-1">
-                        {room.amenities.map((amenity: any, index: number) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 font-semibold rounded-full"
-                          >
-                            {amenity}
-                          </span>
-                        ))}
+                        {room.amenities
+                          .split(",")
+                          .map((amenity: any, index: number) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 text-xs bg-indigo-100 text-indigo-700 font-semibold rounded-full"
+                            >
+                              {amenity}
+                            </span>
+                          ))}
                       </div>
                     </td>
                     <td>
-                      <button className="bg-red-500 text-white py-1 px-4 rounded-full cursor-pointer">
+                      <button
+                        onClick={() => deleteRoom(room._id)}
+                        className="bg-red-500 text-white py-1 px-4 rounded-full cursor-pointer"
+                      >
                         Delete
                       </button>
                     </td>

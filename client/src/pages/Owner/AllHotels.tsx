@@ -13,7 +13,6 @@ const AllHotels = () => {
   const { navigate } = context;
 
   const [hotelData, setHotelData] = useState([]);
-  console.log(hotelData);
 
   const fetchOwnerHotels = async () => {
     try {
@@ -23,7 +22,30 @@ const AllHotels = () => {
       } else {
         toast.error(data.message);
       }
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error.message);
+      ClientCatchError(error);
+    }
+  };
+
+  const deleteHotel = async (id: string) => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this hotel? This action cannot be undone.",
+    );
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const { data } = await httpRequest.delete(`/api/hotel/delete/${id}`);
+      if (data.success) {
+        toast.success(data.message);
+        fetchOwnerHotels();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
       ClientCatchError(error);
     }
   };
@@ -158,7 +180,10 @@ const AllHotels = () => {
                       </div>
                     </td>
                     <td>
-                      <button className="bg-red-500 text-white py-1 px-4 rounded-full cursor-pointer">
+                      <button
+                        onClick={() => deleteHotel(hotel._id)}
+                        className="bg-red-500 text-white py-1 px-4 rounded-full cursor-pointer"
+                      >
                         Delete
                       </button>
                     </td>

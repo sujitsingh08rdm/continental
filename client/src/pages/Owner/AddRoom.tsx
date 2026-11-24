@@ -1,7 +1,25 @@
-import { useState, type ChangeEvent, type SyntheticEvent } from "react";
-import { hotelsData } from "../../assets/assets.js";
+import {
+  useContext,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type SyntheticEvent,
+} from "react";
+
+import { AppContext } from "../../context/AppContext.js";
+import ClientCatchError from "../../utils/ClientCatchError.js";
+import httpRequest from "../../utils/httpRequest.js";
+import toast from "react-hot-toast";
 
 const AddRoom = () => {
+  const context = useContext(AppContext);
+  const [hotelData, setHotelData] = useState([]);
+
+  if (!context) {
+    throw new Error("Conext Not Mounted");
+  }
+  const { navigate } = context;
+
   const [roomData, setRoomData] = useState({
     hotel: "",
     roomType: "",
@@ -12,8 +30,22 @@ const AddRoom = () => {
     isAvailable: true,
   });
 
+  const fetchOwnerHotels = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/hotel/get");
+      if (data.success) {
+        setHotelData(data.hotels);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      ClientCatchError(error);
+    }
+  };
+
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     setRoomData({ ...roomData, [e.target.name]: e.target.value });
   };
@@ -34,8 +66,36 @@ const AddRoom = () => {
 
   const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(roomData);
+    const formData = new FormData();
+    formData.append("hotel", roomData.hotel);
+    formData.append("roomType", roomData.roomType);
+    formData.append("pricePerNight", roomData.pricePerNight);
+    formData.append("description", roomData.description);
+    formData.append("isAvailable", String(roomData.isAvailable));
+    formData.append("amenities", JSON.stringify(roomData.amenities));
+
+    for (let i = 0; i < roomData.images.length; i++) {
+      formData.append("images", roomData.images[i]);
+    }
+
+    try {
+      const { data } = await httpRequest.post("/api/room/add", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (data.success) {
+        toast.success(data.message);
+        navigate("/owner/rooms");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      ClientCatchError(error);
+    }
   };
+
+  useEffect(() => {
+    fetchOwnerHotels();
+  }, []);
 
   return (
     <div className="py-10 flex flex-col justify-between bg-white">
@@ -133,9 +193,9 @@ const AddRoom = () => {
             className="outline-none md:py-2.5 p-3 rounded border border-gray-300"
           >
             <option value="">Select Hotel</option>
-            {hotelsData.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
+            {hotelData.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.hotelName}
               </option>
             ))}
           </select>
