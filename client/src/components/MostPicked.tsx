@@ -23,11 +23,14 @@ const MostPicked = () => {
             key={index}
             className="relative group rounded-lg overflow-hidden cursor-pointer"
           >
-            <img src={item.image} className="size-56 object-cover object-top" />
+            <img
+              src={`http://localhost:8080/images/${item.image}`}
+              className="size-56 object-cover object-top"
+            />
             <div className="absolute p-4 inset-0 flex flex-col text-white justify-end bg-black/50 opacity-0 group-hover:opacity-100 transition duration-300 group-active:opacity-100">
-              <h2 className="text-lg font-medium">{item.name}</h2>
-              <p className="text-sm">{item.address}</p>
-              <p className="text-lg font-medium">{item.price}</p>
+              <h2 className="text-lg font-medium">{item.hotelName}</h2>
+              <p className="text-sm">{item.hotelAddress}</p>
+              <p className="text-lg font-medium">₹{item.price}</p>
             </div>
           </div>
         ))}

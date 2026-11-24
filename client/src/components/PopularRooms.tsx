@@ -25,7 +25,7 @@ const PopularRooms = () => {
           >
             <img
               className="rounded-md max-h-40 w-full object-cover"
-              src={item.images[0]}
+              src={`http://localhost:8080/images/${item.images[0]}`}
               alt="officeImage"
             />
             <p className="text-gray-900 text-xl font-semibold ml-2 mt-4">
