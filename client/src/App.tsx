@@ -18,6 +18,7 @@ import RegisterHotel from "./pages/Owner/RegisterHotel";
 import AllRooms from "./pages/Owner/AllRooms";
 import AddRoom from "./pages/Owner/AddRoom";
 import Bookings from "./pages/Owner/Bookings";
+import Loader from "./components/Loader";
 
 function App() {
   const context = useContext(AppContext);
@@ -40,6 +41,7 @@ function App() {
         <Route path="/room/:id" element={<Room />} />
         <Route path="/about" element={<About />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/loader/:nextUrl" element={<Loader />} />
 
         <Route path="/owner" element={owner ? <OwnerLayout /> : <Login />}>
           <Route index element={<AllHotels />} />

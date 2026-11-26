@@ -17,6 +17,7 @@ import cookieParser from "cookie-parser";
 import UserRouter from "./routes/user.routes";
 import HotelRouter from "./routes/hotel.routes";
 import RoomRouter from "./routes/room.routes";
+import BookingRouter from "./routes/booking.routes";
 
 const app = express();
 
@@ -35,10 +36,10 @@ app.use("/images", express.static("uploads"));
 app.use("/api/auth", UserRouter);
 app.use("/api/hotel", HotelRouter);
 app.use("/api/room", RoomRouter);
+app.use("/api/booking", BookingRouter);
 
 /* Server */
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Continental Server is Running fine on PORT ${PORT}`);
 });
- 

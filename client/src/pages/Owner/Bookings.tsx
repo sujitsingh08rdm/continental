@@ -10,11 +10,37 @@ import {
   Trash,
 } from "lucide-react";
 import moment from "moment";
-import { bookingData } from "../../assets/assets.js";
+import httpRequest from "../../utils/httpRequest.js";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import ClientCatchError from "../../utils/ClientCatchError.js";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
 const Bookings = () => {
+  const [bookingData, setBookingData] = useState([]);
+
+  const getUserBooking = async () => {
+    try {
+      const { data } = await httpRequest.get("/api/booking/hotel");
+
+      if (data.success) {
+        setBookingData(data.bookings);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+      ClientCatchError(error);
+    }
+  };
+
+  useEffect(() => {
+    getUserBooking();
+  }, []);
+
   const getStatusColor = (status: BookingStatus | string): string => {
     switch (status?.toLowerCase()) {
       case "confirmed":
@@ -69,7 +95,6 @@ const Bookings = () => {
           </div>
           <div className="divide-y divide-gray-100">
             {bookingData.map((booking: any) => {
-              const statusIcon = getStatusIcon(booking.status);
               return (
                 <div
                   key={booking._id}
@@ -80,13 +105,13 @@ const Bookings = () => {
                     <div className="col-span-1 md:col-span-5">
                       <div className="flex gap-4">
                         <img
-                          src={booking.room.images[0]}
+                          src={`http://localhost:8080/images/${booking.room.images[0]}`}
                           alt={booking.room.roomType}
                           className="w-20 h-16 md:w-24 md:h-20 rounded-lg object-cover shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-700 text-md mb-1">
-                            {booking.hotel.name}
+                            {booking.hotel.hotelName}
                           </h3>
                           <p className="font-medium mb-1 text-indigo-500 ">
                             {booking.room.roomType}
@@ -94,13 +119,13 @@ const Bookings = () => {
                           <div className="flex items-center gap-1 text-gray-500 text-sm mb-1">
                             <MapPin className="w-3 h-3" />
                             <span className="truncate">
-                              {booking.hotel.address}
+                              {booking.hotel.hotelAddress}
                             </span>
                           </div>
                           <div className="flex items-center gap-1 text-gray-500 text-sm mb-1">
                             <User className="w-3 h-3" />
                             <span className="truncate">
-                              {booking.guests} Guest
+                              {booking.persons} Guest
                               {booking.guests > 0 ? "s" : ""}
                             </span>
                           </div>
@@ -115,7 +140,7 @@ const Bookings = () => {
                           <div>
                             <p className="text-sm text-gray-500">Check-in</p>
                             <p>
-                              {moment(booking.checkInDate).format("DD MMM, YY")}
+                              {moment(booking.checkIn).format("DD MMM, YY")}
                             </p>
                           </div>
                         </div>
@@ -124,9 +149,7 @@ const Bookings = () => {
                           <div>
                             <p className="text-sm text-gray-500">Check-out</p>
                             <p>
-                              {moment(booking.checkOutDate).format(
-                                "DD MMM, YY",
-                              )}
+                              {moment(booking.checkOut).format("DD MMM, YY")}
                             </p>
                           </div>
                         </div>
@@ -138,7 +161,9 @@ const Bookings = () => {
                         <div className="flex items-center gap-2">
                           <CreditCard className="w-4 h-4 text-gray-400 " />
                           <span className="text-sm text-gray-600">
-                            {booking.paymentMethod}
+                            {booking.paymentMethod === "payathotel"
+                              ? "Pay-at-Arrival"
+                              : "Stripe"}
                           </span>
                         </div>
                         <p className="font-bold text-lg text-gray-800">
