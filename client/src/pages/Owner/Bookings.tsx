@@ -23,6 +23,7 @@ const Bookings = () => {
   const getUserBooking = async () => {
     try {
       const { data } = await httpRequest.get("/api/booking/hotel");
+      console.log(data);
 
       if (data.success) {
         setBookingData(data.bookings);
@@ -36,6 +37,7 @@ const Bookings = () => {
       ClientCatchError(error);
     }
   };
+  console.log(bookingData);
 
   useEffect(() => {
     getUserBooking();
@@ -54,22 +56,6 @@ const Bookings = () => {
 
       default:
         return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "confirmed":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-
-      case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-
-      case "cancelled":
-        return <XCircle className="h-4 w-4 text-red-600" />;
-
-      default:
-        return <CircleHelp className="h-4 w-4 text-gray-600" />;
     }
   };
 
