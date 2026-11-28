@@ -1,5 +1,10 @@
 import { useParams } from "react-router-dom";
-import { useContext, useState } from "react";
+import {
+  useContext,
+  useState,
+  type ChangeEvent,
+  type SyntheticEvent,
+} from "react";
 import { AppContext } from "../context/AppContext";
 import {
   Bath,
@@ -22,6 +27,9 @@ import {
   X,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import ClientCatchError from "../utils/ClientCatchError";
+import httpRequest from "../utils/httpRequest";
+import axios from "axios";
 
 const Room = () => {
   const { id } = useParams();
@@ -29,11 +37,18 @@ const Room = () => {
   if (!context) {
     throw new Error("Conext Not Mounted");
   }
-  const { roomData } = context;
+  const { roomData, navigate } = context;
   const [selectedImage, setSelectedImage] = useState(0);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [persons, setPersons] = useState(1);
+  const [bookingData, setBookingData] = useState({
+    checkIn: "",
+    checkOut: "",
+    persons: 1,
+  });
+  const [isAvailable, setIsAvailable] = useState(false);
+
+  const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    setBookingData({ ...bookingData, [e.target.name]: e.target.value });
+  };
 
   const room = roomData.find((r: any) => r._id == id);
 
@@ -76,14 +91,70 @@ const Room = () => {
     return iconMap[amenity] || CheckCircle;
   };
 
-  const handleBooking = () => {
-    if (!checkIn || !checkOut) {
-      toast.error("Please Select check in and check out dates");
-      return;
+  const handleBooking = async (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      if (!bookingData.checkIn || !bookingData.checkOut) {
+        toast.error("Please Select check in and check out dates");
+        return;
+      }
+      if (!isAvailable) {
+        checkRoomAvailability();
+        return;
+      }
+
+      const { data } = await httpRequest.post("/api/booking/book-room", {
+        persons: bookingData.persons,
+        room: roomData[0]._id,
+        checkInDate: bookingData.checkIn,
+        checkOutDate: bookingData.checkOut,
+        paymentMethod: "payathotel",
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+        navigate("/my-bookings");
+        scrollTo(0, 0);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+      ClientCatchError(error);
     }
-    toast.success("Bookig Success");
   };
-  console.log(room);
+
+  const checkRoomAvailability = async () => {
+    try {
+      if (roomData.checkIn >= roomData.checkOut) {
+        throw new Error("Checkin date cannot be greater then Checkout date");
+      }
+      const { data } = await httpRequest.post("/api/booking/check-availibity", {
+        room: room._id,
+        checkInDate: bookingData.checkIn,
+        checkOutDate: bookingData.checkOut,
+      });
+      if (data.success) {
+        if (data.isAvailable) {
+          toast.success("Room Is Available Book Now.");
+          setIsAvailable(true);
+        } else {
+          setIsAvailable(false);
+          toast.error(data.message);
+        }
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data.message || error.message);
+        return console.error(error.response?.data.message || error.message);
+      }
+      ClientCatchError(error);
+    }
+  };
 
   return (
     <div className="py-24 bg-gray-50 min-h-screen">
@@ -237,11 +308,11 @@ const Room = () => {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Book This Room
               </h2>
-              <div className="space-y-4">
+              <form className="space-y-4" onSubmit={handleBooking}>
                 {/* Check in date */}
                 <div>
                   <label
-                    htmlFor="checkin"
+                    htmlFor="checkIn"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
                     <span>
@@ -251,9 +322,10 @@ const Room = () => {
                   </label>
                   <input
                     type="date"
-                    name="checkin"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
+                    name="checkIn"
+                    min={new Date().toISOString().split("T")[0]}
+                    value={bookingData.checkIn}
+                    onChange={onChangeHandler}
                     className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                   />
                 </div>
@@ -269,9 +341,10 @@ const Room = () => {
                   </label>
                   <input
                     type="date"
-                    name="checkin"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
+                    name="checkOut"
+                    min={bookingData.checkIn}
+                    value={bookingData.checkOut}
+                    onChange={onChangeHandler}
                     className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                   />
                 </div>
@@ -287,11 +360,11 @@ const Room = () => {
                   </label>
                   <input
                     type="number"
-                    name="guests"
-                    value={persons}
+                    name="persons"
+                    value={bookingData.persons}
                     min={1}
                     max={10}
-                    onChange={(e) => setPersons(Number(e.target.value))}
+                    onChange={onChangeHandler}
                     className="w-full px-4 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
                   />
                 </div>
@@ -308,14 +381,13 @@ const Room = () => {
 
                 {/* Submit */}
                 <button
-                  className={`w-full py-2 px-4 rounded-lg font-medium transition duration-300 ${room.isAvailable ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-gray-300 hover:bg-gray-500 cursor-not-allowed text-gray-900"}`}
+                  className={`w-full py-2 px-4 rounded-lg font-medium transition duration-300 ${isAvailable ? "bg-indigo-600 hover:bg-indigo-700 text-gray-50" : "bg-gray-600 hover:bg-gray-700 text-indigo-50"} transition-colors du cursor-pointer"}`}
                   type="submit"
-                  onClick={handleBooking}
                   disabled={!room.isAvailable}
                 >
-                  {room.isAvailable ? "Check Availability " : "Not Available"}
+                  {isAvailable ? "Book Now" : "Check Availability"}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>

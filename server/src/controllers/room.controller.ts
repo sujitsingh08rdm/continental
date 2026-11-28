@@ -2,16 +2,7 @@ import { Request, Response } from "express";
 import { Room } from "../models/room.model";
 import { SessionInterface } from "../middlewares/auth.middleware";
 import { CatchError, TryError } from "../utils/error";
-import { Types } from "mongoose";
-import { Hotel } from "../models/hotel.model";
-
-interface HotelInterface {
-  hotelName: string;
-  hotelAddress: string;
-  rating: number;
-  amenities: string[];
-  owner: Types.ObjectId;
-}
+import * as RoomService from "../services/room.service";
 
 // Add a new room
 export const addRoom = async (req: Request, res: Response) => {
@@ -38,34 +29,22 @@ export const addRoom = async (req: Request, res: Response) => {
       images: image,
     };
 
-    await Room.create(payload);
+    const result = await RoomService.addRoom(payload);
 
-    res.status(200).json({ message: "Room Added Successfully", success: true });
+    res.status(200).json({ ...result, success: true });
   } catch (error) {
     CatchError(error, res);
   }
 };
 
+// get owner room
 export const getOwnerRooms = async (req: SessionInterface, res: Response) => {
   try {
     if (!req.user) {
       throw TryError("Unauthorized", 401);
     }
-
     const { id } = req.user;
-    // 1. Find hotels owned by the logged-in user
-    const hotels = await Hotel.find({ owner: id }).select("_id");
-    const hotelIds = hotels.map((hotel) => hotel._id);
-
-    // 2. Find rooms belonging to those hotels
-    const ownerRooms = await Room.find({
-      hotel: { $in: hotelIds },
-    }).populate({
-      path: "hotel",
-      select: "hotelName hotelAddress rating amenities",
-    });
-
-    console.log(ownerRooms);
+    const ownerRooms = await RoomService.getOwnerRooms(id.toString());
 
     res
       .status(200)
@@ -75,16 +54,10 @@ export const getOwnerRooms = async (req: SessionInterface, res: Response) => {
   }
 };
 
-export const getAllRooms = async (req: SessionInterface, res: Response) => {
+// get all room
+export const getAllRooms = async (_req: Request, res: Response) => {
   try {
-    const rooms = await Room.find()
-      .populate({
-        path: "hotel",
-        select: "hotelName hotelAddress rating amenities owner",
-        populate: { path: "owner", select: "name email" },
-      })
-      .exec();
-
+    const rooms = await RoomService.getAllRoom();
     res
       .status(200)
       .json({ rooms, success: true, message: "Owner Rooms Fetched" });
@@ -93,12 +66,13 @@ export const getAllRooms = async (req: SessionInterface, res: Response) => {
   }
 };
 
+// delete room
 export const deleteRoom = async (req: Request, res: Response) => {
   try {
     const { roomId } = req.params;
-    const rooms = await Room.findByIdAndDelete(roomId);
+    const result = await RoomService.deleteRoom(roomId.toString());
 
-    res.status(200).json({ rooms, success: true, message: "Rooms Fetched" });
+    res.status(200).json({ success: true, ...result });
   } catch (error) {
     CatchError(error, res);
   }
